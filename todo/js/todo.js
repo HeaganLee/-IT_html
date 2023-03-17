@@ -27,6 +27,24 @@ class TodoEvent {
             }
         }
     }
+
+    addEventRemoveTodoClick() {
+        const removeButtons = document.querySelectorAll('.content-footer .remove-button');
+        removeButtons.forEach((removeButton, index) => {
+        removeButton.onclick = () => {
+            ModalService.getInstance().showRemoveModal(index);
+        }
+       });
+    }
+
+    addEventModifyTodoClick() {
+        const modifyButtons = document.querySelectorAll('.content-footer .modify-button');
+        modifyButtons.forEach((modifyButton, index) => {
+        modifyButton.onclick = () => {
+            ModalService.getInstance().showModifyModal(index);
+            }
+        });
+    }
 }
 
 class TodoService {
@@ -44,8 +62,13 @@ class TodoService {
         if(localStorage.getItem("todoList") == null) {
             this.todoList = new Array();
         }else {
-            this.todoList =JSON.parse(localStorage.getItem("todoList"));
+            this.todoList = JSON.parse(localStorage.getItem("todoList"));
         }
+        this.loadTodoList();
+    }
+
+    updateLocalStorage() {
+        localStorage.setItem("todoList", JSON.stringify(this.todoList));
         this.loadTodoList();
     }
 
@@ -70,14 +93,31 @@ class TodoService {
         }
 
         this.todoList.push(todoObj);
-        localStorage.setItem("todoList", JSON.stringify(this.todoList));
-        this.loadTodoList();
+        this.updateLocalStorage();
+    }
+
+    modifyTodo(modifyIndex) {
+        const modalModifyText = document.querySelector(".modal-modify-text");
+    
+        const todoObj = {
+            // 만약 변수명이 동일하다면 ""를 이용해주면 된다.
+            todoDate: this.todoList[modifyIndex].todoDate,
+            todoDateTime: this.todoList[modifyIndex].todoDateTime,
+            todoContent: modalModifyText.value
+        }
+
+        this.todoList.splice(modifyIndex,1,todoObj);
+        this.updateLocalStorage();
     }
 
     loadTodoList() {
         const todoContentList = document.querySelector(".todo-content-list");
         todoContentList.innerHTML = ``;
 
+        // 그냥 추가하는 것 보다 반복문을 돌리는 이유는
+        // 계속해서 추가되는 데이터의 양을 못 따라오기 때문에
+        // 반복문을 돌려서 계속해서 초기화를 시키고 가지고 오는 것이다.
+        // 모든 데이터를 취합해서 보여주어야 하기 때문에
         this.todoList.forEach(todoObj =>{
 
             todoContentList.innerHTML += `
@@ -99,5 +139,8 @@ class TodoService {
                     </div>
                 </li>`;
         });
+
+        TodoEvent.getInstance().addEventRemoveTodoClick();
+        TodoEvent.getInstance().addEventModifyTodoClick();
     }
 }
